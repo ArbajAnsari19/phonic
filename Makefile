@@ -157,6 +157,15 @@ config-test: ## Test configuration loading for all environments
 	@echo "$(YELLOW)Production:$(RESET)"
 	@go run cmd/config-test/main.go prod
 
+.PHONY: logging-test
+logging-test: ## Test logging system for all environments
+	@echo "$(BLUE)📝 Testing logging system...$(RESET)"
+	@echo "$(YELLOW)Development (Console):$(RESET)"
+	@go run cmd/logging-test/main.go dev
+	@echo ""
+	@echo "$(YELLOW)Staging (JSON):$(RESET)"
+	@go run cmd/logging-test/main.go staging
+
 .PHONY: run-gateway
 run-gateway: build-gateway ## Run gateway service locally
 	@echo "$(BLUE)🚀 Starting gateway service...$(RESET)"
