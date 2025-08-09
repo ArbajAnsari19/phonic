@@ -1,0 +1,106 @@
+# Phonic AI Calling Agent - Production Configuration
+
+app:
+  name: "Phonic AI Calling Agent"
+  version: "1.0.0"
+  environment: "prod"
+  debug: false
+  host: "0.0.0.0"
+  port: 8080
+
+database:
+  host: "${PHONIC_DATABASE_HOST}"
+  port: 5432
+  username: "${PHONIC_DATABASE_USERNAME}"
+  password: "${PHONIC_DATABASE_PASSWORD}"
+  database: "${PHONIC_DATABASE_NAME}"
+  ssl_mode: "require"
+  max_open_conns: 100
+  max_idle_conns: 50
+  conn_max_lifetime: "4h"
+
+redis:
+  host: "${PHONIC_REDIS_HOST}"
+  port: 6379
+  password: "${PHONIC_REDIS_PASSWORD}"
+  database: 0
+  pool_size: 50
+
+moshi:
+  stt:
+    host: "${PHONIC_MOSHI_STT_HOST}"
+    port: 8001
+    websocket_path: "/transcribe"
+    timeout: "120s"
+    retry_attempts: 5
+    sample_rate: 16000
+    channels: 1
+    chunk_size: 1600
+  tts:
+    host: "${PHONIC_MOSHI_TTS_HOST}"
+    port: 8002
+    websocket_path: "/synthesize"
+    timeout: "120s"
+    retry_attempts: 5
+    voice_id: "default"
+    speed: 1.0
+    quality: "ultra"
+
+services:
+  gateway:
+    host: "phonic-gateway"
+    port: 8080
+    timeout: "60s"
+  session:
+    host: "phonic-session"
+    port: 8083
+    timeout: "60s"
+  orchestrator:
+    host: "phonic-orchestrator"
+    port: 8084
+    timeout: "60s"
+  stt_client:
+    host: "phonic-stt-client"
+    port: 8085
+    timeout: "60s"
+  tts_client:
+    host: "phonic-tts-client"
+    port: 8086
+    timeout: "60s"
+
+logging:
+  level: "warn"
+  format: "json"
+  output: "stdout"
+
+security:
+  jwt_secret: "${PHONIC_JWT_SECRET}"
+  jwt_expiry_hours: 6
+  rate_limit:
+    requests_per_minute: 200
+    burst_size: 100
+    window_size: "1m"
+  cors:
+    allowed_origins:
+      - "${PHONIC_FRONTEND_URL}"
+      - "${PHONIC_ADMIN_URL}"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+      - "X-API-Key"
+
+storage:
+  endpoint: "${PHONIC_STORAGE_ENDPOINT}"
+  access_key: "${PHONIC_STORAGE_ACCESS_KEY}"
+  secret_key: "${PHONIC_STORAGE_SECRET_KEY}"
+  bucket: "phonic-audio-prod"
+  region: "${PHONIC_STORAGE_REGION}"
+  use_ssl: true
+  audio_retention_days: 90

@@ -1,0 +1,40 @@
+# Moshi TTS Configuration for Development
+# This will be used when we integrate actual Kyutai Moshi servers
+
+server:
+  host: "0.0.0.0"
+  port: 8002
+  websocket_path: "/synthesize"
+
+model:
+  name: "kyutai/tts-model"
+  device: "cpu"  # Use "cuda" for GPU in production
+  batch_size: 2
+  max_sequence_length: 512
+
+audio:
+  sample_rate: 24000
+  channels: 1
+  format: "wav"
+  quality: "high"
+
+voice:
+  default_voice_id: "default"
+  speed: 1.0
+  pitch: 1.0
+  volume: 1.0
+
+features:
+  streaming: true
+  real_time_factor: 1.0  # 1.0 = real-time, >1.0 = faster
+  chunk_size: 2400  # 100ms at 24kHz
+  buffer_size: 24000  # 1 second buffer
+
+performance:
+  num_workers: 2
+  max_concurrent_requests: 8
+  timeout_seconds: 60
+
+logging:
+  level: "debug"
+  format: "json"

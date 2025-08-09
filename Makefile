@@ -145,6 +145,18 @@ dev: ## Start development environment with hot reload
 dev-status: ## Show development environment status
 	@./scripts/dev-status.sh
 
+.PHONY: config-test
+config-test: ## Test configuration loading for all environments
+	@echo "$(BLUE)🔧 Testing configuration loading...$(RESET)"
+	@echo "$(YELLOW)Development:$(RESET)"
+	@go run cmd/config-test/main.go dev
+	@echo ""
+	@echo "$(YELLOW)Staging:$(RESET)"
+	@go run cmd/config-test/main.go staging
+	@echo ""
+	@echo "$(YELLOW)Production:$(RESET)"
+	@go run cmd/config-test/main.go prod
+
 .PHONY: run-gateway
 run-gateway: build-gateway ## Run gateway service locally
 	@echo "$(BLUE)🚀 Starting gateway service...$(RESET)"

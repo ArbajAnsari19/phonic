@@ -1,0 +1,35 @@
+# Moshi STT Configuration for Development
+# This will be used when we integrate actual Kyutai Moshi servers
+
+server:
+  host: "0.0.0.0"
+  port: 8001
+  websocket_path: "/transcribe"
+
+model:
+  name: "kyutai/stt-1b-en_fr"
+  device: "cpu"  # Use "cuda" for GPU in production
+  batch_size: 4
+  max_sequence_length: 1024
+
+audio:
+  sample_rate: 16000
+  channels: 1
+  chunk_size: 1600  # 100ms at 16kHz
+  buffer_size: 16000  # 1 second buffer
+
+features:
+  streaming: true
+  timestamps: true
+  word_level_timestamps: true
+  vad_enabled: true  # Voice Activity Detection for barge-in
+  partial_results: true
+
+performance:
+  num_workers: 2
+  max_concurrent_requests: 10
+  timeout_seconds: 30
+
+logging:
+  level: "debug"
+  format: "json"
