@@ -1,0 +1,205 @@
+# Phonic AI Calling Agent - Docker Compose
+# Production-grade local development environment
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+  
+  redis:
+    image: redis:7-alpine
+    container_name: phonic-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./configs/dev/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - phonic-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: phonic-postgres
+    environment:
+      POSTGRES_DB: phonic
+      POSTGRES_USER: phonic
+      POSTGRES_PASSWORD: phonic_dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phonic"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - phonic-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: phonic-minio
+    environment:
+      MINIO_ROOT_USER: phonic
+      MINIO_ROOT_PASSWORD: phonic_dev_password
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - phonic-network
+
+  # =============================================================================
+  # Moshi STT/TTS Servers (Placeholder - will be replaced with actual Moshi)
+  # =============================================================================
+  
+  moshi-stt:
+    image: busybox:latest
+    container_name: phonic-moshi-stt
+    command: |
+      sh -c "
+        echo 'Moshi STT Server placeholder - will be replaced with actual Kyutai server'
+        echo 'Port 8001 will be used for STT WebSocket connections'
+        sleep infinity
+      "
+    ports:
+      - "8001:8001"
+    networks:
+      - phonic-network
+    # TODO: Replace with actual Moshi STT server configuration
+    # image: kyutai/moshi-stt:latest
+    # volumes:
+    #   - ./configs/dev/moshi-stt.toml:/config/config.toml
+    # command: moshi-server worker --config /config/config.toml
+
+  moshi-tts:
+    image: busybox:latest
+    container_name: phonic-moshi-tts
+    command: |
+      sh -c "
+        echo 'Moshi TTS Server placeholder - will be replaced with actual Kyutai server'
+        echo 'Port 8002 will be used for TTS WebSocket connections'
+        sleep infinity
+      "
+    ports:
+      - "8002:8002"
+    networks:
+      - phonic-network
+    # TODO: Replace with actual Moshi TTS server configuration
+    # image: kyutai/moshi-tts:latest
+    # volumes:
+    #   - ./configs/dev/moshi-tts.toml:/config/config.toml
+    # command: moshi-server worker --config /config/config.toml
+
+  # =============================================================================
+  # Phonic Go Services (will be built as we create them)
+  # =============================================================================
+  
+  # Gateway service will be added in later steps
+  # gateway:
+  #   build:
+  #     context: .
+  #     dockerfile: infra/docker/gateway.Dockerfile
+  #   container_name: phonic-gateway
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - phonic-network
+
+  # Session service will be added in later steps
+  # session:
+  #   build:
+  #     context: .
+  #     dockerfile: infra/docker/session.Dockerfile
+  #   container_name: phonic-session
+  #   ports:
+  #     - "8083:8083"
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - phonic-network
+
+  # =============================================================================
+  # Monitoring & Observability (Optional for development)
+  # =============================================================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: phonic-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/dev/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - phonic-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: phonic-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./configs/dev/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - phonic-network
+
+# =============================================================================
+# Network Configuration
+# =============================================================================
+
+networks:
+  phonic-network:
+    driver: bridge
+    name: phonic-network
+
+# =============================================================================
+# Volume Configuration
+# =============================================================================
+
+volumes:
+  redis_data:
+    name: phonic-redis-data
+  postgres_data:
+    name: phonic-postgres-data
+  minio_data:
+    name: phonic-minio-data
+  prometheus_data:
+    name: phonic-prometheus-data
+  grafana_data:
+    name: phonic-grafana-data

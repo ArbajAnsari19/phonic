@@ -1,0 +1,45 @@
+# Prometheus configuration for Phonic AI Calling Agent
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'phonic-dev'
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Phonic services (will be added as we create them)
+  - job_name: 'phonic-gateway'
+    static_configs:
+      - targets: ['gateway:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'phonic-orchestrator'
+    static_configs:
+      - targets: ['orchestrator:8084']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'phonic-session'
+    static_configs:
+      - targets: ['session:8083']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Infrastructure services
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']

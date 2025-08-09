@@ -1,0 +1,88 @@
+# Phonic AI Calling Agent - Development Docker Compose
+# Extended configuration for hot reload and development features
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Development Infrastructure (extends main compose)
+  # =============================================================================
+  
+  redis:
+    volumes:
+      - ./configs/dev/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_DISABLE_COMMANDS=FLUSHALL,FLUSHDB  # Prevent accidental data loss
+
+  postgres:
+    environment:
+      POSTGRES_DB: phonic_dev
+      POSTGRES_USER: phonic_dev
+      POSTGRES_PASSWORD: phonic_dev_password
+    volumes:
+      - ./infra/docker/postgres/init-dev.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infra/docker/postgres/dev-data.sql:/docker-entrypoint-initdb.d/dev-data.sql
+
+  # =============================================================================
+  # Development Tools
+  # =============================================================================
+  
+  # Database admin tool
+  adminer:
+    image: adminer:latest
+    container_name: phonic-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - phonic-network
+
+  # Redis admin tool
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: phonic-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    networks:
+      - phonic-network
+
+  # File browser for MinIO alternative
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: phonic-filebrowser
+    ports:
+      - "8082:80"
+    volumes:
+      - minio_data:/srv
+      - ./configs/dev/filebrowser.json:/config.json
+    networks:
+      - phonic-network
+
+  # =============================================================================
+  # Development Utilities
+  # =============================================================================
+  
+  # Mailhog for email testing (if needed for notifications)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: phonic-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - phonic-network
+
+networks:
+  phonic-network:
+    external: true
+
+volumes:
+  minio_data:
+    external: true
+  redis_data:
+    external: true
+  postgres_data:
+    external: true
