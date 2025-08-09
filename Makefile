@@ -166,6 +166,11 @@ logging-test: ## Test logging system for all environments
 	@echo "$(YELLOW)Staging (JSON):$(RESET)"
 	@go run cmd/logging-test/main.go staging
 
+.PHONY: health-test
+health-test: ## Test health check system
+	@echo "$(BLUE)🏥 Testing health check system...$(RESET)"
+	@go run cmd/health-test/main.go dev
+
 .PHONY: run-gateway
 run-gateway: build-gateway ## Run gateway service locally
 	@echo "$(BLUE)🚀 Starting gateway service...$(RESET)"
